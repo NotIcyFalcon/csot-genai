@@ -18,7 +18,7 @@ pip install python-dotenv google-genai openai
 
 - **Prompt Checking**: Using Gemini to smartly check if user wants to get an answer from agent or if he wants to verify previous assistant's response. Implemented in `check_critic` method of `ChatBot` class.
 
-- **Summary Generation**: Auto summarizes message after memory fills or if the user uses `/summarize` command. Prints summary if it gets generated via command(not if it is auto-generated or if the user is exiting.). Saving tokens by only generating summary if any conversation exists after last summary generation. Remembers last conversation briefly even after summary generation in case user wants to use Verifier.
+- **Summary Generation**: Auto summarizes message after memory fills or if the user uses `/summarize` command. Prints summary if it gets generated via command(not if it is auto-generated or if the user is exiting.). Saving tokens by only generating summary if any conversation exists after last summary generation. Remembers last conversation briefly even after summary generation in case user wants to use Verifier. Uses gemini flash for quick summary but uses try except loop in case of error, falls back to default agent model for summary generation. Implemented in `summarize` method of `ChatBot` class.
 
 - **Error Handling**: Defaults for every customizable setting in `Initialize_Chat` function in case of errors or wrong values, try-except blocks for ai-response in case if AI faces high-demand to try again and prevent errors. Verifier checks before running if assistant response exists, preventing index out of range crashes.
 
