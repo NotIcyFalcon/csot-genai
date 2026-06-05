@@ -87,13 +87,14 @@ class ChatBot:
             else:
                 self.get_response(prompt, cnt+1)
             
-    def summarize(self, print_output, silent=False):
-        if len(self.history) >= 3 and self.history[-3]["role"] == "assistant":
+    def summarize(self, print_output, silent=False, include_last_conversation=False):
+        if (len(self.history) >= 3 and self.history[-3]["role"] == "assistant") or (include_last_conversation and self.history[-1]["role"] == "assistant"):
             if not silent:
                 slow_print("Summarizing messages till now. Please wait...")    
             try:
-                temp=self.history[-2:]
-                self.history=self.history[:-2]
+                if not include_last_conversation:
+                    temp=self.history[-2:]
+                    self.history=self.history[:-2]
                 self.history.append({"role": "user", "content": "Generate a highly condensed, factual summary of the conversation up to this point. This summary will be used as a system memory state for an AI. Focus strictly on retaining established facts, user preferences, core context, and any ongoing tasks. Completely omit all conversational filler, greetings, and narrative flow. Output a dense, bulleted list of core data points."})
                 transcript = "\n".join([f"{msg['role'].capitalize()}: {msg['content']}" for msg in self.history[:-1]])
                 summary_instruction = self.history[-1]["content"]
@@ -104,8 +105,12 @@ class ChatBot:
                     contents=gemini_prompt
                 )
                 
-                self.history = [self.history[0]] + [{"role": "system", "content": response.text}] + temp
-                self.conversations_count = 0
+                self.history = [self.history[0]] + [{"role": "system", "content": response.text}]
+                if not include_last_conversation:
+                    self.history=self.history+temp
+                    self.conversations_count = 1
+                else:
+                    self.conversations_count = 0
                 
                 if not silent:
                     slow_print("Messages summarized.")
@@ -113,15 +118,20 @@ class ChatBot:
                     slow_print("Summarized History: " + self.history[1]["content"])
             except:
                 try:
-                    temp=self.history[-2:]
-                    self.history=self.history[:-2]
+                    if not include_last_conversation:
+                        temp=self.history[-2:]
+                        self.history=self.history[:-2]
                     self.history.append({"role": "user", "content": "Generate a highly condensed, factual summary of the conversation up to this point. This summary will be used as a system memory state for an AI. Focus strictly on retaining established facts, user preferences, core context, and any ongoing tasks. Completely omit all conversational filler, greetings, and narrative flow. Output a dense, bulleted list of core data points."})
                     summary = client.responses.create(
                         model = self.model,
                         input = self.history,
                     )
-                    self.history = [self.history[0]] + [{"role": "system", "content": summary.output_text}] + temp
-                    self.conversations_count = 0
+                    self.history = [self.history[0]] + [{"role": "system", "content": summary.output_text}]
+                    if not include_last_conversation:
+                        self.history = self.history + temp
+                        self.conversations_count = 1
+                    else:
+                        self.conversations_count = 0
                     if silent == False:
                         slow_print("Messages summarized.")
                     if print_output:
@@ -178,8 +188,8 @@ class ChatBot:
         
     def exit(self):
         slow_print("Exiting...")
-        self.summarize(False, True)
-        self.history = [self.history[1:]] + [{"role": "system", "content": "The user is ending the conversation. Generate a polite, warm, and professional closing message. Thank the user for their time, offer a brief well-wish for the rest of their day, and let them know you will be ready to help whenever they return. Keep the response concise, strictly between 2 to 3 sentences."}]
+        self.summarize(False, True, True)
+        self.history = [self.history[1]] + [{"role": "system", "content": "The user is ending the conversation. Generate a polite, warm, and professional closing message. Thank the user for their time, offer a brief well-wish for the rest of their day, and let them know you will be ready to help whenever they return. Keep the response concise, strictly between 2 to 3 sentences."}]
         self.get_response()
         
 def slow_print(text, speed=0.015, newline=True):
@@ -284,7 +294,7 @@ def Initialize_Chat():
                 aichat.exit()
                 break
             elif usr_input.lower()[:10] == "/summarize":
-                aichat.summarize(True)
+                aichat.summarize(True, False, True)
             else:
                 aichat.check_critic(usr_input)
         except:
