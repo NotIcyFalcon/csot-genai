@@ -22,6 +22,8 @@ pip install python-dotenv google-genai openai
 
 - **Error Handling**: Defaults for every customizable setting in `Initialize_Chat` function in case of errors or wrong values, try-except blocks for ai-response in case if AI faces high-demand to try again and prevent errors. Verifier checks before running if assistant response exists, preventing index out of range crashes.
 
+- **Well Defined Rules**: I thought of some rules and used Gemini Pro to write those rules into long well-defined system instructions so that the AI does exactly what it's intended and also did test run and improvised on them for best AI behaviour.
+
 - **Clean Exit**: If the user types exit to exit or in case of KeyboardInterrupt or any other errors while talking with ai agent, the agent first generates a chat summary and then generates an exit message for the user based on the summary. Implimented in `exit` method of `ChatBot` class.
 
 ## Example run of agent.py-
