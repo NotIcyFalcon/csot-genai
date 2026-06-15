@@ -1,0 +1,7 @@
+aiohttp
+httpx
+openai
+python-dotenv
+textual
+rich
+mcp
